@@ -1,0 +1,203 @@
+---
+title: 'Class 7: Machine Learning 1'
+author: 'Barry (PID: 911)'
+date: "2/8/2022"
+output: github_document
+---
+
+# Clustering methods
+
+Find groups (a.k.a.) clusters in my data.
+
+## K-means clustering
+
+Make up some data to test with.
+
+```{r}
+# Make up some data with 2 clear groups
+tmp <- c( rnorm(30, mean = 3), rnorm(30, mean = -3) )
+x <- cbind(tmp, rev(tmp))
+
+plot(x)
+```
+
+
+The `kmeans()` function does k-means clustering.
+
+```{r}
+k <- kmeans(x, centers=4, nstart=20)
+k
+```
+We can use the dollar syntax to get at the results (components of the returned list).
+
+> Q1. How many points are in each cluster?
+
+```{r}
+k$size
+```
+
+
+> Q2. What ‘component’ of your result object details 
+      - cluster size?
+      - cluster assignment/membership? 
+      - cluster center?
+
+```{r}
+k$size
+```
+
+```{r}
+k$cluster
+```
+```{r}
+k$centers
+```
+
+
+
+> Q3. Plot x colored by the kmeans cluster assignment and 
+      add cluster centers as blue points
+
+```{r}
+plot(x, col=k$cluster)
+points(k$centers, col="blue", pch=15, cex=2)
+```
+
+## Hierarchical Clustering
+
+The `hclust()` function needs a distance matrix as input not our original data. For this we use the `dist()` function.
+
+```{r}
+hc <- hclust( dist(x) )
+hc
+```
+
+```{r}
+plot(hc)
+abline(h=10, col="red")
+```
+
+To get our cluster membership vector we need to cut our tree and for this we use the `cutree()`
+
+```{r}
+cutree(hc, h=10)
+```
+You can by a given height h= or into a give number of k groups with k=
+
+```{r}
+cutree(hc, k=2)
+```
+
+# Principal Component Analysis
+
+## PCA of UK food data
+
+Let's read our data about the wierd stuff folks from the UK eat and drink:
+
+```{r}
+url <- "https://tinyurl.com/UK-foods"
+x <- read.csv(url, row.names=1)
+```
+
+Look at the first bit of the file:
+
+```{r}
+head(x)
+```
+
+How may columns in this dataset:
+
+```{r}
+ncol(x)
+```
+
+We can make some plots to try to understand this data a bit more. For example barplots:
+
+```{r}
+barplot( as.matrix(x) )
+```
+
+```{r}
+barplot( as.matrix(x), beside=TRUE )
+```
+
+
+# PCA to the rescue
+
+The main base R function for PCA is called `prcomp()`. prcomp() expects the observations to be rows and the variables to be columns therefore we need to first transpose our data.frame matrix with the t() transpose function.
+
+
+
+```{r}
+pca <- prcomp( t(x) )
+summary(pca)
+```
+
+What is in this returned pca object?
+
+```{r}
+attributes(pca)
+```
+```{r}
+plot( pca$x[,1:2], col=c("orange", "red", "blue", "green"), pch=15 )
+text( pca$x[,1], pca$x[,2], labels=colnames(x))
+```
+
+We can look at how the variables contribute to our new PCs by examining the `pca$rotation` component of our results.
+
+```{r}
+barplot( pca$rotation[,1], las=2 )
+```
+
+
+# An RNA-Seq PCA example...
+
+Read the data first
+
+```{r}
+url2 <- "https://tinyurl.com/expression-CSV"
+rna.data <- read.csv(url2, row.names=1)
+head(rna.data)
+```
+
+How many genes (how many rows)?
+
+```{r}
+nrow(rna.data)
+```
+How many experiments (columns)?
+
+```{r}
+ncol(rna.data)
+```
+
+Let's do PCA of this dataset. First take the transpose as that is what the prcomp() function wants...
+
+```{r}
+pca <- prcomp( t(rna.data), scale=TRUE)
+summary(pca)
+```
+We can make our score plot (a.k.a. PCA plot) from the `pca$x`.
+
+```{r}
+plot(pca$x[,1], pca$x[,2])
+```
+
+Make a little color vector to color up our plot by wt and ko
+
+```{r}
+colvec <- c(rep("red", 5), rep("blue", 5) )
+plot(pca$x[,1], pca$x[,2], col=colvec, pch=15)
+```
+
+
+```{r}
+y <- c(1:5)
+z <- c("red", "blue")
+cbind(y, z)
+```
+
+```{r}
+kmeans(pca$x[,1:2], centers=2)
+```
+
